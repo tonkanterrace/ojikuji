@@ -412,6 +412,15 @@
 
   <!-- Settings -->
   <div class="card">
+    <div class="card-label">Anthropic API キー</div>
+    <div class="setting-row">
+      <label class="setting-label" for="anthropic-key">API Key</label>
+      <input class="field-input" id="anthropic-key" type="password" placeholder="sk-ant-..." oninput="saveSettings()">
+    </div>
+    <p style="font-size:11px;color:var(--text-hint);margin-top:8px"><a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:inherit">console.anthropic.com</a> で取得できます</p>
+  </div>
+
+  <div class="card">
     <div class="card-label">Supabase 接続設定</div>
     <div class="setting-row">
       <label class="setting-label" for="sb-url">Project URL</label>
@@ -459,13 +468,16 @@ let imageMime = 'image/jpeg';
 window.addEventListener('DOMContentLoaded', () => {
   const url = localStorage.getItem('sb_url') || '';
   const key = localStorage.getItem('sb_key') || '';
+  const akey = localStorage.getItem('anthropic_key') || '';
   if (url) document.getElementById('sb-url').value = url;
   if (key) document.getElementById('sb-key').value = key;
+  if (akey) document.getElementById('anthropic-key').value = akey;
 });
 
 function saveSettings() {
   localStorage.setItem('sb_url', document.getElementById('sb-url').value.trim());
   localStorage.setItem('sb_key', document.getElementById('sb-key').value.trim());
+  localStorage.setItem('anthropic_key', document.getElementById('anthropic-key').value.trim());
 }
 
 document.getElementById('fileInput').addEventListener('change', e => {
@@ -528,10 +540,25 @@ async function runOCR() {
 
 「absent」はそのフィールドがシートに存在しない場合に使用してください。`;
 
+  const anthropicKey = localStorage.getItem('anthropic_key') || '';
+  if (!anthropicKey) {
+    document.getElementById('ocrStatus').style.display = 'none';
+    document.getElementById('ocrError').style.display = 'flex';
+    document.getElementById('ocrErrorMsg').textContent = 'Anthropic API キーを下の設定欄に入力してください';
+    document.getElementById('ocrBtn').disabled = false;
+    setStep(0);
+    return;
+  }
+
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': anthropicKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
