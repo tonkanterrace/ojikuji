@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>おじくじ 回答登録</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f5f0;
+    --surface: #ffffff;
+    --border: #e2dfd8;
+    --border-mid: #c8c4bc;
+    --text: #1a1a18;
+    --text-muted: #6b6963;
+    --text-hint: #9e9b94;
+    --accent: #1a1a18;
+    --accent-bg: #f0ede6;
+    --teal: #0f6e56;
+    --teal-bg: #e1f5ee;
+    --teal-border: #9fe1cb;
+    --amber: #854f0b;
+    --amber-bg: #faeeda;
+    --amber-border: #fac775;
+    --danger: #a32d2d;
+    --danger-bg: #fcebeb;
+    --danger-border: #f7c1c1;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1916;
+      --surface: #242320;
+      --border: #38362f;
+      --border-mid: #4a4840;
+      --text: #e8e5dd;
+      --text-muted: #9e9b94;
+      --text-hint: #6b6963;
+      --accent: #e8e5dd;
+      --accent-bg: #2c2a24;
+      --teal: #5dcaa5;
+      --teal-bg: #04342c;
+      --teal-border: #0f6e56;
+      --amber: #ef9f27;
+      --amber-bg: #412402;
+      --amber-border: #854f0b;
+      --danger: #f09595;
+      --danger-bg: #501313;
+      --danger-border: #a32d2d;
+    }
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100dvh;
+  }
+
+  .page {
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 2rem 1rem 4rem;
+  }
+
+  /* Header */
+  .header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .header h1 {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+  .header p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 3px;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+  .card-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-hint);
+    margin-bottom: 0.75rem;
+  }
+
+  /* Upload zone */
+  .upload-zone {
+    border: 1.5px dashed var(--border-mid);
+    border-radius: var(--radius-sm);
+    padding: 2.5rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+  }
+  .upload-zone:hover { background: var(--accent-bg); border-color: var(--text-hint); }
+  .upload-zone svg { display: block; margin: 0 auto 10px; opacity: 0.4; }
+  .upload-zone p { font-size: 14px; color: var(--text-muted); }
+  .upload-zone small { font-size: 12px; color: var(--text-hint); display: block; margin-top: 3px; }
+
+  .preview-img {
+    width: 100%; max-height: 260px; object-fit: contain;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    margin-bottom: 1rem;
+    display: none;
+  }
+
+  /* Buttons */
+  .btn {
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    width: 100%; padding: 11px 16px;
+    font-size: 14px; font-weight: 600;
+    border-radius: var(--radius-sm);
+    border: 1px solid;
+    cursor: pointer;
+    transition: opacity 0.12s;
+    letter-spacing: -0.01em;
+  }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-dark {
+    background: var(--text); color: var(--bg);
+    border-color: var(--text);
+  }
+  .btn-dark:hover:not(:disabled) { opacity: 0.85; }
+  .btn-teal {
+    background: var(--teal-bg); color: var(--teal);
+    border-color: var(--teal-border);
+  }
+  .btn-teal:hover:not(:disabled) { opacity: 0.8; }
+
+  /* Field grid */
+  .field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 1rem;
+  }
+  .field-full { grid-column: 1 / -1; }
+
+  .field-label {
+    font-size: 12px; color: var(--text-muted);
+    margin-bottom: 5px; display: flex; align-items: center; gap: 5px;
+  }
+  .field-input {
+    width: 100%; padding: 9px 11px;
+    font-size: 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--text);
+    transition: border-color 0.12s;
+    font-family: inherit;
+  }
+  .field-input:focus { outline: none; border-color: var(--border-mid); }
+  .field-wrap.absent { opacity: 0.45; }
+
+  /* Confidence badges */
+  .badge {
+    font-size: 10px; font-weight: 600;
+    padding: 1px 5px; border-radius: 99px; border: 1px solid;
+    letter-spacing: 0.04em;
+  }
+  .badge-high { background: var(--teal-bg); color: var(--teal); border-color: var(--teal-border); }
+  .badge-med  { background: var(--amber-bg); color: var(--amber); border-color: var(--amber-border); }
+  .badge-low  { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-border); }
+  .badge-absent { background: var(--accent-bg); color: var(--text-hint); border-color: var(--border); }
+
+  /* Status */
+  .status {
+    display: none; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--text-muted);
+    margin-top: 10px;
+  }
+  .spinner {
+    width: 15px; height: 15px; flex-shrink: 0;
+    border: 2px solid var(--border);
+    border-top-color: var(--text-muted);
+    border-radius: 50%;
+    animation: spin 0.65s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Success banner */
+  .success-banner {
+    display: none; align-items: center; gap: 9px;
+    background: var(--teal-bg); color: var(--teal);
+    border: 1px solid var(--teal-border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px; font-size: 13px; font-weight: 500;
+    margin-top: 10px;
+  }
+
+  /* Error banner */
+  .error-banner {
+    display: none; align-items: center; gap: 9px;
+    background: var(--danger-bg); color: var(--danger);
+    border: 1px solid var(--danger-border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px; font-size: 13px;
+    margin-top: 10px;
+  }
+
+  /* Step indicator */
+  .steps {
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 1.5rem;
+  }
+  .step-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--border-mid);
+    transition: background 0.2s;
+  }
+  .step-dot.active { background: var(--text); }
+  .step-dot.done {
+    background: var(--teal);
+    position: relative;
+  }
+  .step-label {
+    font-size: 13px; color: var(--text-muted);
+    margin-left: 4px;
+  }
+
+  /* Divider */
+  .divider {
+    border: none; border-top: 1px solid var(--border);
+    margin: 1.5rem 0;
+  }
+
+  /* SQL block */
+  .sql-wrap {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    position: relative;
+  }
+  .sql-block {
+    font-family: 'Menlo', 'Consolas', monospace;
+    font-size: 12px; line-height: 1.7;
+    color: var(--text-muted);
+    white-space: pre; overflow-x: auto;
+  }
+  .copy-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12px; padding: 5px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: transparent; color: var(--text-muted);
+    cursor: pointer; font-family: inherit;
+    transition: background 0.1s;
+  }
+  .copy-btn:hover { background: var(--accent-bg); }
+
+  /* Settings inputs */
+  .setting-row { margin-bottom: 10px; }
+  .setting-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: block; }
+
+  /* Version tag */
+  .version-tag {
+    display: inline-block;
+    font-size: 11px; font-weight: 500;
+    padding: 2px 8px; border-radius: 99px;
+    background: var(--accent-bg);
+    color: var(--text-hint);
+    border: 1px solid var(--border);
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  /* Sheet type label */
+  .sheet-type {
+    font-size: 12px; color: var(--text-hint);
+    margin-bottom: 1rem;
+    padding: 5px 9px;
+    background: var(--accent-bg);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    display: none;
+  }
+
+  @media (max-width: 480px) {
+    .field-grid { grid-template-columns: 1fr; }
+    .field-full { grid-column: 1; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <h1>おじくじ 回答登録 <span class="version-tag">v2</span></h1>
+    <p>シートを撮影 → OCR読み取り → Supabaseへ保存</p>
+  </div>
+
+  <!-- Step indicator -->
+  <div class="steps">
+    <div class="step-dot active" id="dot1"></div>
+    <div class="step-dot" id="dot2"></div>
+    <div class="step-dot" id="dot3"></div>
+    <span class="step-label" id="step-label">写真をアップロード</span>
+  </div>
+
+  <!-- Step 1: Upload -->
+  <div class="card" id="uploadCard">
+    <div class="card-label">シート画像</div>
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+        <circle cx="12" cy="13" r="4"/>
+      </svg>
+      <p>タップして写真を選択</p>
+      <small>JPG / PNG 対応</small>
+    </div>
+    <input type="file" id="fileInput" accept="image/*" style="display:none">
+    <img id="previewImg" class="preview-img" alt="プレビュー">
+    <button class="btn btn-dark" id="ocrBtn" onclick="runOCR()" disabled style="margin-top:12px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>
+      </svg>
+      OCRで読み取る
+    </button>
+    <div class="status" id="ocrStatus">
+      <div class="spinner"></div><span>Claude Vision で読み取り中...</span>
+    </div>
+    <div class="error-banner" id="ocrError">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span id="ocrErrorMsg">読み取りに失敗しました</span>
+    </div>
+  </div>
+
+  <!-- Step 2: Review -->
+  <div class="card" id="editCard" style="display:none">
+    <div class="card-label">読み取り結果を確認・修正</div>
+    <div class="sheet-type" id="sheetType"></div>
+    <div class="field-grid">
+      <div class="field-wrap field-full" id="wrap-category">
+        <div class="field-label">カテゴリ <span id="cat-conf"></span></div>
+        <input class="field-input" id="f-category" type="text" placeholder="例：恋愛">
+      </div>
+      <div class="field-wrap field-full">
+        <div class="field-label">質問文 <span id="q-conf"></span></div>
+        <input class="field-input" id="f-question" type="text" placeholder="例：初デートはどこ？">
+      </div>
+      <div class="field-wrap field-full">
+        <div class="field-label">回答 <span id="a-conf"></span></div>
+        <input class="field-input" id="f-answer" type="text" placeholder="例：小浜公園">
+      </div>
+      <div class="field-wrap" id="wrap-pref">
+        <div class="field-label">都道府県 <span id="pref-conf"></span></div>
+        <input class="field-input" id="f-pref" type="text" placeholder="例：福井県">
+      </div>
+      <div class="field-wrap" id="wrap-city">
+        <div class="field-label">市区町村 <span id="city-conf"></span></div>
+        <input class="field-input" id="f-city" type="text" placeholder="例：福井市">
+      </div>
+      <div class="field-wrap">
+        <div class="field-label">年齢 <span id="age-conf"></span></div>
+        <input class="field-input" id="f-age" type="text" placeholder="例：40">
+      </div>
+      <div class="field-wrap">
+        <div class="field-label">ニックネーム <span id="nick-conf"></span></div>
+        <input class="field-input" id="f-nick" type="text" placeholder="例：ゆいゆい">
+      </div>
+      <div class="field-wrap field-full" id="wrap-date">
+        <div class="field-label">記入日 <span id="date-conf"></span></div>
+        <input class="field-input" id="f-date" type="text" placeholder="例：2023-05-13">
+      </div>
+    </div>
+
+    <button class="btn btn-teal" id="saveBtn" onclick="saveToSupabase()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+      </svg>
+      Supabaseへ保存する
+    </button>
+    <div class="status" id="saveStatus">
+      <div class="spinner"></div><span>Supabase へ書き込み中...</span>
+    </div>
+    <div class="success-banner" id="successBanner">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      <span id="successMsg">保存しました！</span>
+    </div>
+    <div class="error-banner" id="saveError">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span id="saveErrorMsg">保存エラー</span>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Settings -->
+  <div class="card">
+    <div class="card-label">Supabase 接続設定</div>
+    <div class="setting-row">
+      <label class="setting-label" for="sb-url">Project URL</label>
+      <input class="field-input" id="sb-url" type="text" placeholder="https://xxxx.supabase.co" oninput="saveSettings()">
+    </div>
+    <div class="setting-row">
+      <label class="setting-label" for="sb-key">anon key</label>
+      <input class="field-input" id="sb-key" type="password" placeholder="eyJhbGciOiJIUzI1NiIs..." oninput="saveSettings()">
+    </div>
+    <p style="font-size:11px;color:var(--text-hint);margin-top:8px">接続情報はブラウザに自動保存されます</p>
+  </div>
+
+  <!-- SQL -->
+  <div class="card">
+    <div class="card-label">Supabase テーブル定義 SQL（初回のみ実行）</div>
+    <div class="sql-wrap">
+      <div class="sql-block" id="sqlBlock">CREATE TABLE ojikuji_responses (
+  id          bigserial PRIMARY KEY,
+  created_at  timestamptz DEFAULT now(),
+  category    text,
+  question    text,
+  answer      text,
+  prefecture  text,
+  city        text,
+  age         int,
+  nickname    text,
+  entry_date  text
+);</div>
+    </div>
+    <button class="copy-btn" onclick="copySQL(this)">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+      </svg>
+      SQLをコピー
+    </button>
+  </div>
+
+</div>
+
+<script>
+let imageBase64 = null;
+let imageMime = 'image/jpeg';
+
+// Load saved settings
+window.addEventListener('DOMContentLoaded', () => {
+  const url = localStorage.getItem('sb_url') || '';
+  const key = localStorage.getItem('sb_key') || '';
+  if (url) document.getElementById('sb-url').value = url;
+  if (key) document.getElementById('sb-key').value = key;
+});
+
+function saveSettings() {
+  localStorage.setItem('sb_url', document.getElementById('sb-url').value.trim());
+  localStorage.setItem('sb_key', document.getElementById('sb-key').value.trim());
+}
+
+document.getElementById('fileInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  imageMime = file.type || 'image/jpeg';
+  const reader = new FileReader();
+  reader.onload = ev => {
+    imageBase64 = ev.target.result.split(',')[1];
+    const img = document.getElementById('previewImg');
+    img.src = ev.target.result;
+    img.style.display = 'block';
+    document.getElementById('ocrBtn').disabled = false;
+    document.getElementById('ocrError').style.display = 'none';
+    setStep(1);
+  };
+  reader.readAsDataURL(file);
+});
+
+function setStep(n) {
+  const labels = ['写真をアップロード', 'OCR読み取り中...', '内容を確認して保存'];
+  ['dot1','dot2','dot3'].forEach((id,i) => {
+    const el = document.getElementById(id);
+    el.className = 'step-dot' + (i < n ? ' done' : i === n ? ' active' : '');
+  });
+  document.getElementById('step-label').textContent = labels[n] || '';
+}
+
+async function runOCR() {
+  if (!imageBase64) return;
+  document.getElementById('ocrBtn').disabled = true;
+  document.getElementById('ocrStatus').style.display = 'flex';
+  document.getElementById('ocrError').style.display = 'none';
+  setStep(1);
+
+  const prompt = `これは「おじくじ」という体験の回答シートです。シートのデザインは複数バージョンあります。
+画像から読み取れる項目を抽出し、以下のJSON形式のみで返してください。説明・前置きは不要です。
+
+{
+  "sheet_version": "シートのデザインを簡潔に説明（例：横型カード、縦型短冊など）",
+  "category": "カテゴリ（丸バッジや区分表示があれば。なければ空文字）",
+  "question": "質問文",
+  "answer": "回答（手書き部分）",
+  "prefecture": "都道府県（あれば。なければ空文字）",
+  "city": "市区町村（あれば。なければ空文字）",
+  "age": "年齢の数字のみ（あれば。なければ空文字）",
+  "nickname": "ニックネームまたはペンネーム（あれば。なければ空文字）",
+  "entry_date": "記入日をYYYY-MM-DD形式に変換（あれば。なければ空文字）",
+  "confidence": {
+    "category": "high/medium/low/absent",
+    "question": "high/medium/low",
+    "answer": "high/medium/low",
+    "prefecture": "high/medium/low/absent",
+    "city": "high/medium/low/absent",
+    "age": "high/medium/low/absent",
+    "nickname": "high/medium/low/absent",
+    "entry_date": "high/medium/low/absent"
+  }
+}
+
+「absent」はそのフィールドがシートに存在しない場合に使用してください。`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: imageMime, data: imageBase64 } },
+            { type: 'text', text: prompt }
+          ]
+        }]
+      })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    const text = data.content.map(b => b.text || '').join('');
+    const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
+    fillForm(parsed);
+    document.getElementById('ocrStatus').style.display = 'none';
+    document.getElementById('editCard').style.display = 'block';
+    setStep(2);
+    document.getElementById('editCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (err) {
+    document.getElementById('ocrStatus').style.display = 'none';
+    document.getElementById('ocrError').style.display = 'flex';
+    document.getElementById('ocrErrorMsg').textContent = '読み取りに失敗しました：' + err.message;
+    document.getElementById('ocrBtn').disabled = false;
+    setStep(0);
+  }
+}
+
+function confBadge(level) {
+  if (!level) return '';
+  if (level === 'absent') return '<span class="badge badge-absent">このシートにはなし</span>';
+  const map = { high: ['badge-high','高'], medium: ['badge-med','中'], low: ['badge-low','低'] };
+  const [cls, label] = map[level] || ['badge-low','?'];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function fillForm(d) {
+  const conf = d.confidence || {};
+  const st = document.getElementById('sheetType');
+  if (d.sheet_version) {
+    st.textContent = '検出タイプ：' + d.sheet_version;
+    st.style.display = 'block';
+  }
+
+  const fields = [
+    ['f-category','cat-conf','category','wrap-category'],
+    ['f-question','q-conf','question',null],
+    ['f-answer','a-conf','answer',null],
+    ['f-pref','pref-conf','prefecture','wrap-pref'],
+    ['f-city','city-conf','city','wrap-city'],
+    ['f-age','age-conf','age',null],
+    ['f-nick','nick-conf','nickname',null],
+    ['f-date','date-conf','entry_date','wrap-date'],
+  ];
+  fields.forEach(([fid, cid, key, wid]) => {
+    document.getElementById(fid).value = d[key] || '';
+    document.getElementById(cid).innerHTML = confBadge(conf[key]);
+    if (wid) {
+      document.getElementById(wid).classList.toggle('absent', conf[key] === 'absent');
+    }
+  });
+}
+
+async function saveToSupabase() {
+  const url = document.getElementById('sb-url').value.trim();
+  const key = document.getElementById('sb-key').value.trim();
+  if (!url || !key) {
+    alert('Supabase URL と anon key を入力してください');
+    return;
+  }
+
+  const body = {
+    category:   document.getElementById('f-category').value || null,
+    question:   document.getElementById('f-question').value || null,
+    answer:     document.getElementById('f-answer').value || null,
+    prefecture: document.getElementById('f-pref').value || null,
+    city:       document.getElementById('f-city').value || null,
+    age:        parseInt(document.getElementById('f-age').value) || null,
+    nickname:   document.getElementById('f-nick').value || null,
+    entry_date: document.getElementById('f-date').value || null
+  };
+
+  document.getElementById('saveBtn').disabled = true;
+  document.getElementById('saveStatus').style.display = 'flex';
+  document.getElementById('successBanner').style.display = 'none';
+  document.getElementById('saveError').style.display = 'none';
+
+  try {
+    const res = await fetch(`${url}/rest/v1/ojikuji_responses`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': key,
+        'Authorization': `Bearer ${key}`,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error(await res.text());
+
+    document.getElementById('saveStatus').style.display = 'none';
+    document.getElementById('successBanner').style.display = 'flex';
+    const name = body.nickname || (body.age ? body.age + '歳' : '');
+    document.getElementById('successMsg').textContent = `保存完了！${name ? name + ' の回答を' : ''}登録しました`;
+    document.getElementById('saveBtn').disabled = false;
+
+    setTimeout(() => resetForm(), 3500);
+  } catch (err) {
+    document.getElementById('saveStatus').style.display = 'none';
+    document.getElementById('saveError').style.display = 'flex';
+    document.getElementById('saveErrorMsg').textContent = '保存エラー：' + err.message;
+    document.getElementById('saveBtn').disabled = false;
+  }
+}
+
+function resetForm() {
+  imageBase64 = null;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('previewImg').style.display = 'none';
+  document.getElementById('ocrBtn').disabled = true;
+  document.getElementById('editCard').style.display = 'none';
+  document.getElementById('successBanner').style.display = 'none';
+  document.getElementById('saveError').style.display = 'none';
+  document.getElementById('ocrError').style.display = 'none';
+  setStep(0);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function copySQL(btn) {
+  navigator.clipboard.writeText(document.getElementById('sqlBlock').textContent).then(() => {
+    btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> コピーしました`;
+    setTimeout(() => {
+      btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> SQLをコピー`;
+    }, 2000);
+  });
+}
+</script>
+</body>
+</html>
